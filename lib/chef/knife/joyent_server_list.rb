@@ -24,7 +24,7 @@ module KnifeJoyent
         (a.name || '') <=> (b.name || '')
       end.each do |s|
         servers << s.id.to_s
-        servers << s.name
+        servers << s.name.to_s
 
         servers << case s.state
         when 'running'
