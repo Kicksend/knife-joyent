@@ -1,4 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/base')
+require 'timeout'
 
 module KnifeJoyent
   class JoyentServerCreate < Chef::Knife
@@ -12,7 +13,7 @@ module KnifeJoyent
       require 'chef/knife/bootstrap'
       Chef::Knife::Bootstrap.load_deps
     end
-    
+
     banner 'knife joyent server create (options)'
 
     # mixlib option parsing
@@ -63,7 +64,7 @@ module KnifeJoyent
       :description => "Bootstrap a distro using a template",
       :proc => Proc.new { |d| Chef::Config[:knife][:distro] = d },
       :default => "chef-full"
-      
+
     option :no_host_key_verify,
       :long => "--no-host-key-verify",
       :description => "Disable host key verification",
@@ -95,6 +96,26 @@ module KnifeJoyent
       tcp_socket && tcp_socket.close
     end
 
+    def test_ssh(hostname)
+      hostname_from_server = nil
+
+      Timeout.timeout(10) do
+        Net::SSH.start(hostname, 'root') do |ssh|
+          hostname_from_server = ssh.exec!("hostname")
+        end
+      end
+
+      if hostname_from_server
+        Chef::Log.debug("sshd accepting connections: #{hostname_from_server}")
+        yield
+        true
+      else
+        false
+      end
+
+    rescue Timeout::Error => e
+      false
+    end
 
     # Run Chef bootstrap script
     def bootstrap_for_node(server)
@@ -130,10 +151,10 @@ module KnifeJoyent
         server = self.connection.servers.create(:dataset => config[:dataset],
                                             :package => config[:package],
                                             :name => config[:name])
-      server.wait_for { print "."; ready? }                                      
+      server.wait_for { print "."; ready? }
       rescue => e
         Chef::Log.debug("e: #{e}")
-        if e.response && e.response.body.kind_of?(String)
+        if e.respond_to?(:response) && e.response && e.response.body.kind_of?(String)
           error = MultiJson.decode(e.response.body)
           puts ui.error(error['message'])
           exit 1
@@ -141,7 +162,7 @@ module KnifeJoyent
           raise
         end
       end
-      
+
       puts ui.color("Created machine:", :cyan)
       msg("ID", server.id.to_s)
       msg("Name", server.name)
@@ -150,15 +171,15 @@ module KnifeJoyent
       msg("Dataset", server.dataset)
       msg("IP's", server.ips)
       puts ui.color("attempting to bootstrap on #{server.ips.first}", :cyan)
-    
-      print(".") until tcp_test_ssh(server.ips.first) {
+
+      print(".") until test_ssh(server.ips.first) {
         sleep 1
         puts("done")
       }
       bootstrap_for_node(server).run
       exit 0
     end
-    
+
     def msg(label, value = nil)
       if value && !value.empty?
         puts "#{ui.color(label, :cyan)}: #{value}"
