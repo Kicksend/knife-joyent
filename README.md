@@ -4,7 +4,7 @@ Knife Joyent
 This is a [Knife](http://wiki.opscode.com/display/chef/Knife) plugin for Joyent CloudAPI. This plugin gives knife
 the ability to create, bootstrap, and manage servers on the [Joyent Public Cloud](http://www.joyentcloud.com/) as well as Cloud providers powered by Joyent's [SmartDataCenter](http://www.joyent.com/products/smartdatacenter/) product offering.
 
-For more information on Joyent CloudAPI, see: [CloudAPI Documentation](api.joyentcloud.com/docs)
+For more information on Joyent CloudAPI, see: [CloudAPI Documentation](http://api.joyentcloud.com/docs)
 
 ## Installation
 
@@ -31,13 +31,13 @@ Currently available commands:
     knife joyent server resize <server_id> -f <flavor>
     knife joyent server start <server_id>
     knife joyent server stop <server_id>
-    knife joyent snapshot create <server> <snapshot_name>
-    knife joyent snapshot delete <server> <snapshot_name>
+    knife joyent snapshot create <server_id> <snapshot_name>
+    knife joyent snapshot delete <server_id> <snapshot_name>
     knife joyent snapshot list <server_id>
     knife joyent tag create <server_id> <tag> <value>
     knife joyent tag delete <server_id> <tag>
     knife joyent tag delete <server_id> -A
-    knife joyent tag list <server>
+    knife joyent tag list <server_id>
 
 ## Configuration
 
@@ -69,6 +69,12 @@ provider powered by [SmartDataCenter](http://www.joyent.com/products/smartdatace
     
     # Defaults to https://us-west-1.api.joyentcloud.com/
     knife[:joyent_api_url] = "https://us-sw-1.api.joyentcloud.com/"
+
+## Contributors
+
+ - [Sean Omera](https://github.com/someara) - Opscode
+ - [Eric Saxby](https://github.com/sax) - ModCloth
+ - [Stephen Lauck](https://github.com/stephenlauck) - ModCloth
 
 ## License
 
