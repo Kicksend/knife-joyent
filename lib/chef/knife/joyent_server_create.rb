@@ -115,10 +115,10 @@ module KnifeJoyent
 
 
     # Run Chef bootstrap script
-    def bootstrap_for_node(server)
+    def bootstrap_for_node(server, pubip)
       bootstrap = Chef::Knife::Bootstrap.new
       Chef::Log.debug("Bootstrap name_args = [ #{server.ips.first} ]")
-      bootstrap.name_args = [ server.ips.first ]
+      bootstrap.name_args = [ pubip ]
       Chef::Log.debug("Bootstrap run_list = #{config[:run_list]}")
       bootstrap.config[:run_list] = config[:run_list]
       Chef::Log.debug("Bootstrap ssh_user = #{config[:ssh_user]}")
@@ -174,7 +174,7 @@ module KnifeJoyent
         sleep 1
         puts("done")
       }
-      bootstrap_for_node(server).run
+      bootstrap_for_node(server, pubip).run
       exit 0
     end
     
