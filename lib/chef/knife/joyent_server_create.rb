@@ -174,7 +174,10 @@ module KnifeJoyent
       msg("Dataset", server.dataset)
       msg("IP's", server.ips)
 
-      unless config[:no_bootstrap]
+
+      if config[:no_bootstrap]
+        puts ui.color("Not bootstrapping this node, you'll have to run a separate bootstrap cycle with a run_list yourself")
+      else
         pubip = server.ips.find{|ip| ip and not (is_loopback(ip) or is_private(ip) or is_linklocal(ip))}
         puts ui.color("Attempting to bootstrap on #{pubip}", :cyan)
         puts ui.color("NOTE: Bootstrapping doesn't currently work on SmartOS. Use https://github.com/joyent/smartmachine_cookbooks on a SmartOS node after creation", :cyan)
