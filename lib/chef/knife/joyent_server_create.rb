@@ -65,17 +65,17 @@ module KnifeJoyent
       :proc => Proc.new { |d| Chef::Config[:knife][:distro] = d },
       :default => "chef-full"
       
-    option :no_host_key_verify,
-      :long => "--no-host-key-verify",
+    option :host_key_verify,
+      :long => "--host-key-verify",
       :description => "Disable host key verification",
       :boolean => true,
       :default => false
 
-    option :no_bootstrap,
-      :long => "--no-bootstrap",
+    option :bootstrap,
+      :long => "--bootstrap",
       :description => "Don't attempt to bootstrap the new node, stop after creation",
       :boolean => true,
-      :default => false
+      :default => true
 
     def is_linklocal(ip)
       linklocal = IPAddr.new "169.254.0.0/16"
@@ -142,7 +142,7 @@ module KnifeJoyent
       Chef::Log.debug("Bootstrap environment = #{config[:environment]}")
       bootstrap.config[:environment] = config[:environment]
       Chef::Log.debug("Bootstrap no_host_key_verify = #{config[:no_host_key_verify]}")
-      bootstrap.config[:no_host_key_verify] = config[:no_host_key_verify]
+      bootstrap.config[:no_host_key_verify] = !config[:host_key_verify]
 
       bootstrap
     end
@@ -175,9 +175,7 @@ module KnifeJoyent
       msg("IP's", server.ips)
 
 
-      if config[:no_bootstrap]
-        puts ui.color("Not bootstrapping this node, you'll have to run a separate bootstrap cycle with a run_list yourself")
-      else
+      if config[:bootstrap]
         pubip = server.ips.find{|ip| ip and not (is_loopback(ip) or is_private(ip) or is_linklocal(ip))}
         puts ui.color("Attempting to bootstrap on #{pubip}", :cyan)
         puts ui.color("NOTE: Bootstrapping doesn't currently work on SmartOS. Use https://github.com/joyent/smartmachine_cookbooks on a SmartOS node after creation", :cyan)
@@ -187,7 +185,10 @@ module KnifeJoyent
           puts("done")
         }
         bootstrap_for_node(server, pubip).run
+      else
+        puts ui.color("Not bootstrapping this node, you'll have to run a separate bootstrap cycle with a run_list yourself")
       end
+
       exit 0
     end
     
