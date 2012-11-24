@@ -71,6 +71,12 @@ module KnifeJoyent
       :boolean => true,
       :default => false
 
+    option :no_bootstrap,
+      :long => "--no-bootstrap",
+      :description => "Don't attempt to bootstrap the new node, stop after creation",
+      :boolean => true,
+      :default => false
+
     def is_linklocal(ip)
       linklocal = IPAddr.new "169.254.0.0/16"
       return linklocal.include?(ip)
@@ -159,7 +165,7 @@ module KnifeJoyent
           raise
         end
       end
-      
+
       puts ui.color("Created machine:", :cyan)
       msg("ID", server.id.to_s)
       msg("Name", server.name)
@@ -167,14 +173,18 @@ module KnifeJoyent
       msg("Type", server.type)
       msg("Dataset", server.dataset)
       msg("IP's", server.ips)
-      pubip = server.ips.find{|ip| ip and not (is_loopback(ip) or is_private(ip) or is_linklocal(ip))}
-      puts ui.color("attempting to bootstrap on #{pubip}", :cyan)
-    
-      print(".") until tcp_test_ssh(pubip) {
-        sleep 1
-        puts("done")
-      }
-      bootstrap_for_node(server, pubip).run
+
+      unless config[:no_bootstrap]
+        pubip = server.ips.find{|ip| ip and not (is_loopback(ip) or is_private(ip) or is_linklocal(ip))}
+        puts ui.color("Attempting to bootstrap on #{pubip}", :cyan)
+        puts ui.color("NOTE: Bootstrapping doesn't currently work on SmartOS. Use https://github.com/joyent/smartmachine_cookbooks on a SmartOS node after creation", :cyan)
+
+        print(".") until tcp_test_ssh(pubip) {
+          sleep 1
+          puts("done")
+        }
+        bootstrap_for_node(server, pubip).run
+      end
       exit 0
     end
     
